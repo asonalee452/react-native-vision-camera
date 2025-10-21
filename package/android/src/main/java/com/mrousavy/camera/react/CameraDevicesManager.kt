@@ -99,9 +99,18 @@ class CameraDevicesManager(private val reactContext: ReactApplicationContext) : 
   }
 
   fun sendAvailableDevicesChangedEvent() {
-    val eventEmitter = reactContext.getJSModule(RCTDeviceEventEmitter::class.java)
-    val devices = getDevicesJson()
-    eventEmitter.emit("CameraDevicesChanged", devices)
+    // 检查 React 实例是否已完全初始化，避免在启动早期崩溃
+    if (!reactContext.hasActiveReactInstance()) {
+      Log.w(TAG, "Skipping CameraDevicesChanged event - React instance not ready yet")
+      return
+    }
+    try {
+      val eventEmitter = reactContext.getJSModule(RCTDeviceEventEmitter::class.java)
+      val devices = getDevicesJson()
+      eventEmitter.emit("CameraDevicesChanged", devices)
+    } catch (e: Exception) {
+      Log.e(TAG, "Failed to send CameraDevicesChanged event: ${e.message}", e)
+    }  
   }
 
   override fun getConstants(): MutableMap<String, Any?> {
